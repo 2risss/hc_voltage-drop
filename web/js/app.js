@@ -277,23 +277,29 @@
     renderHistory();
   });
 
-  fetch("config/formula.json", { cache: "no-store" })
-    .then(function (resp) {
-      if (!resp.ok) throw new Error("无法加载公式配置");
-      return resp.json();
-    })
-    .then(function (data) {
-      cfg = data;
-      $("formulaVersion").textContent = "公式版本 " + cfg.version + " · 来源 " + cfg.source.workbookVersion + " · 记录只留在本机";
-      renderForm();
-      renderHistory();
-    })
-    .catch(function (err) {
-      $("formulaVersion").textContent = "公式配置加载失败";
-      showError(err.message || "公式配置加载失败。请用本地网页服务打开，不要直接双击文件。");
-    });
+  function boot(data) {
+    cfg = data;
+    $("formulaVersion").textContent = "公式版本 " + cfg.version + " · 来源 " + cfg.source.workbookVersion + " · 记录只留在本机";
+    renderForm();
+    renderHistory();
+  }
 
-  if ("serviceWorker" in navigator) {
+  if (window.EMBEDDED_FORMULA) {
+    boot(window.EMBEDDED_FORMULA);
+  } else {
+    fetch("config/formula.json", { cache: "no-store" })
+      .then(function (resp) {
+        if (!resp.ok) throw new Error("无法加载公式配置");
+        return resp.json();
+      })
+      .then(boot)
+      .catch(function (err) {
+        $("formulaVersion").textContent = "公式配置加载失败";
+        showError(err.message || "公式配置加载失败。请用本地网页服务打开，或使用单文件版「压降验证测算.html」。");
+      });
+  }
+
+  if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
     navigator.serviceWorker.register("sw.js");
   }
 })();

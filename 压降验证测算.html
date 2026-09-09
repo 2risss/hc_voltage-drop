@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#171a1c">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="压降测算">
+  <title>压降验证测算</title>
+  <style>
+:root {
+  --bg: #f4f5f6;
+  --card: #ffffff;
+  --text: #171a1c;
+  --muted: #5c6370;
+  --line: #e4e6e8;
+  --red: #b42318;
+  --red-dark: #8f1c13;
+  --green: #1f7a4d;
+  --yellow: #9a6700;
+  --orange: #c2410c;
+  --shadow: 0 8px 24px rgba(23, 26, 28, 0.06);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "微软雅黑", Calibri, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 14px 40px;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, #171a1c 0%, #2a2f33 100%);
+  color: #fff;
+  margin: 0 -14px 14px;
+  padding: 16px 18px 14px;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.top p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.seg button {
+  border: 1px solid var(--line);
+  background: #f7f8f9;
+  border-radius: 10px;
+  padding: 10px 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+}
+.seg button.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.field {
+  margin-bottom: 10px;
+}
+.field label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.field .unit {
+  color: var(--muted);
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+}
+.field input, .field select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+  background: #fff;
+  color: var(--text);
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.kpi {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.kpi .item {
+  background: #f7f8f9;
+  border-radius: 12px;
+  padding: 12px 10px;
+}
+.kpi .item.wide { grid-column: 1 / -1; }
+.kpi span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+.kpi b {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.badge.green { background: #e8f6ee; color: var(--green); }
+.badge.yellow { background: #fff6d9; color: var(--yellow); }
+.badge.orange { background: #ffedd5; color: var(--orange); }
+.badge.red { background: #fde8e6; color: var(--red); }
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.result-row:last-child { border-bottom: 0; }
+.result-row b {
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+button.primary, button.ghost {
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-size: 15px;
+  font-family: inherit;
+}
+button.primary {
+  background: var(--red);
+  color: #fff;
+  border: 0;
+}
+button.ghost {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+button.danger {
+  width: 100%;
+  margin-top: 8px;
+  background: #fff;
+  color: var(--red);
+  border: 1px solid #f0c9c6;
+  border-radius: 12px;
+  padding: 10px;
+  font-family: inherit;
+}
+
+.history-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.history-item p { margin: 0; font-size: 13px; }
+.history-item .time {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+}
+
+.error {
+  background: #fde8e6;
+  color: var(--red);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.okline {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.install-tip {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (min-width: 720px) {
+  .app { padding-top: 12px; }
+  .top { border-radius: 14px; margin: 0 0 14px; }
+}
+
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="top">
+      <h1>压降验证测算</h1>
+      <p id="formulaVersion">正在加载公式配置…</p>
+    </header>
+
+    <section class="card">
+      <h2>电源类型</h2>
+      <div class="seg" role="tablist">
+        <button type="button" id="modeSingle" class="active">单相</button>
+        <button type="button" id="modeThree">三相</button>
+      </div>
+      <p class="install-tip">本文件可在微信中直接打开。数据只保存在这台手机里，不会上传。</p>
+    </section>
+
+    <section class="card" id="formCard">
+      <h2>基本信息</h2>
+      <div id="formFields"></div>
+    </section>
+
+    <section class="card" id="resultCard">
+      <h2>验证结果</h2>
+      <div id="errorBox" class="error" hidden></div>
+      <div id="resultBox"></div>
+      <div class="actions">
+        <button type="button" class="primary" id="btnCalc">计算并保存</button>
+        <button type="button" class="ghost" id="btnReset">恢复默认</button>
+      </div>
+      <p class="okline" id="calcHint">改参数后结果会实时更新；点「计算并保存」才会写入最近 10 条记录。</p>
+    </section>
+
+    <section class="card">
+      <h2>最近记录</h2>
+      <div id="historyBox"></div>
+      <button type="button" class="danger" id="btnClear">一键清空历史</button>
+    </section>
+  </div>
+  <script>
+window.EMBEDDED_FORMULA = {"version":"1.0.0","title":"压降验证测算","source":{"workbook":"压降计算公式.xlsm","workbookVersion":"V1.1","sheets":["SP","TP"],"notes":"计算步骤来自原表宏 cal1/cal2。网页只解释执行本 JSON，不把公式写死在页面代码里。"},"constants":{"resistivity_20c":1.72,"resistivity_scale":100,"temp_coeff":0.004,"conductor_temp_c":60,"ref_temp_c":20,"resistance_factor":1.02,"go_return":2,"power_factor":0.97,"sqrt3":1.732,"max_length_m":500,"kw_scale":1000,"air_derate_tray":0.93,"air_derate_conduit":0.78},"inputs":{"common":[{"id":"cable_type","label":"电缆类型","unit":"","type":"select","options":["YJV","YJV22"],"default":"YJV","usedIn":[],"remark":"原公式未使用，界面保留作备注。"},{"id":"obc_a","label":"车载充电机","unit":"A","type":"select","options":[48,72,96],"default":48,"usedIn":["three_phase"],"remark":"单相原公式未使用，界面保留作备注；三相用于取计算电流。"},{"id":"limit_a","label":"充电器限流设置","unit":"A","type":"select","options":[6,8,10,13,16,20,25,32],"default":32},{"id":"ambient_c","label":"环境温度","unit":"℃","type":"select","options":[25,30,35,40],"default":25,"remark":"只用于空气敷设载流量，不用于电阻。"},{"id":"section_mm2","label":"电缆主线芯线径","unit":"mm²","type":"select","options":[6,10,16,25,35],"default":6}],"single_phase":[{"id":"u_source","label":"电源点电压","unit":"V","type":"number","min":198,"max":242,"default":220}],"three_phase":[{"id":"u_ab","label":"电源点电压 UAB","unit":"V","type":"number","min":342,"max":418,"default":380},{"id":"u_bc","label":"电源点电压 UBC","unit":"V","type":"number","min":342,"max":418,"default":380},{"id":"u_ca","label":"电源点电压 UCA","unit":"V","type":"number","min":342,"max":418,"default":380}],"lengths":[{"id":"len_conduit","label":"穿管明敷、线槽","unit":"m","type":"number","min":0,"max":500,"default":0},{"id":"len_ladder","label":"有孔托盘、梯架、桥架","unit":"m","type":"number","min":0,"max":500,"default":0},{"id":"len_solid_tray","label":"无孔托盘","unit":"m","type":"number","min":0,"max":500,"default":0},{"id":"len_ceiling","label":"吊顶、架空地板","unit":"m","type":"number","min":0,"max":500,"default":0},{"id":"len_brick","label":"砖墙、孔道内","unit":"m","type":"number","min":0,"max":500,"default":0},{"id":"len_direct_bury","label":"直埋地","unit":"m","type":"number","min":0,"max":500,"default":0},{"id":"len_pipe_bury","label":"穿管埋地","unit":"m","type":"number","min":0,"max":500,"default":0}],"bury_temps":[{"id":"temp_direct_bury","label":"直埋地温度","unit":"℃","type":"select","options":[20,25,30],"default":25,"requiredIf":"len_direct_bury != 0"},{"id":"temp_pipe_bury","label":"穿管埋地温度","unit":"℃","type":"select","options":[20,25,30],"default":25,"requiredIf":"len_pipe_bury != 0"}]},"tables":{"air_ampacity":{"by":["section_mm2","ambient_c"],"rows":[{"section_mm2":6,"25":40,"30":38,"35":36,"40":34},{"section_mm2":10,"25":78,"30":75,"35":72,"40":68},{"section_mm2":16,"25":104,"30":100,"35":96,"40":91},{"section_mm2":25,"25":132,"30":127,"35":122,"40":116},{"section_mm2":35,"25":164,"30":158,"35":152,"40":144}]},"air_ampacity_overflow":{"single_phase":{"6":"34 - (ambient_c - 40) * 2","10":"0","16":"0","25":"0","35":"0"},"three_phase":{"6":"34 - (ambient_c - 40) * 2","10":"68 - (ambient_c - 40) * 3","16":"91 - (ambient_c - 40) * 4","25":"116 - (ambient_c - 40) * 5","35":"0"}},"bury_ampacity":{"by":["section_mm2","bury_temp_c"],"rows":[{"section_mm2":10,"20":52,"25":49,"30":46},{"section_mm2":16,"20":67,"25":64,"30":60},{"section_mm2":25,"20":86,"25":82,"30":77},{"section_mm2":35,"20":103,"25":98,"30":92}],"missingMeans":0}},"thresholds":{"single_phase_voltage":[{"id":"too_high","label":"过高电压损失","when":"u_end < 185","color":"red"},{"id":"high","label":"高电压损失","when":"u_end >= 185 and u_end < 198","color":"orange"},{"id":"medium","label":"中电压损失","when":"u_end >= 198 and u_end < 209","color":"yellow"},{"id":"low","label":"低电压损失","when":"u_end >= 209","color":"green"}],"three_phase_voltage":[{"id":"too_high","label":"过高电压损失","when":"u_end_table < 320","color":"red"},{"id":"high","label":"高电压损失","when":"u_end_table >= 320 and u_end_table < 342","color":"orange"},{"id":"medium","label":"中电压损失","when":"u_end_table >= 342 and u_end_table < 361","color":"yellow"},{"id":"low","label":"低电压损失","when":"u_end_table >= 361","color":"green"}],"ampacity":[{"id":"ok","label":"足够","when":"I_c >= I_calc","color":"green"},{"id":"short","label":"不足","when":"I_c < I_calc","color":"red"}],"power_loss":[{"id":"low","label":"低功率损失","when":"p_loss_pct < 5","color":"green"},{"id":"medium","label":"中功率损失","when":"p_loss_pct >= 5 and p_loss_pct < 10","color":"yellow"},{"id":"high","label":"高功率损失","when":"p_loss_pct >= 10","color":"red"}]},"steps":{"shared_length":[{"id":"L","label":"电缆总长度","unit":"m","op":"expr","expr":"len_conduit + len_ladder + len_solid_tray + len_ceiling + len_brick + len_direct_bury + len_pipe_bury"},{"id":"length_ok","op":"assert","expr":"L <= max_length_m","message":"电缆总长超过500米!"}],"resistance":[{"id":"R_dc","label":"直流电阻 Rθ","unit":"Ω","op":"expr","expr":"((resistivity_20c / resistivity_scale) * (1 + temp_coeff * (conductor_temp_c - ref_temp_c)) * resistance_factor * L) / section_mm2"},{"id":"R_ac","label":"交流电阻 Rj","unit":"Ω","op":"expr","expr":"R_dc"}],"ampacity":[{"id":"is_buried","op":"expr","expr":"(len_direct_bury != 0) or (len_pipe_bury != 0)"},{"id":"bury_temp_c","op":"expr","expr":"max(temp_direct_bury if len_direct_bury != 0 else 0, temp_pipe_bury if len_pipe_bury != 0 else 0) if is_buried else 0"},{"id":"I_c_raw","op":"ampacity_lookup"},{"id":"I_c","label":"电缆载流量 IC","unit":"A","op":"air_derate"}],"single_phase":[{"id":"I_calc","label":"计算电流","unit":"A","op":"expr","expr":"limit_a"},{"id":"dU","label":"线路电压损失值 Δu","unit":"V","op":"expr","expr":"I_calc * R_dc * go_return"},{"id":"dU_pct","label":"线路电压损失百分数 Δu%","unit":"%","op":"expr","expr":"I_calc * R_dc * go_return / u_source * 100"},{"id":"u_end","label":"充电器端电压 U","unit":"V","op":"expr","expr":"u_source - dU"},{"id":"p_loss_kw","label":"最大热损失功率 Pl","unit":"kW","op":"expr","expr":"I_calc * I_calc * R_ac * go_return / kw_scale"},{"id":"p_loss_pct","label":"最大热损失功率百分数 ΔPl%","unit":"%","op":"expr","expr":"I_calc * I_calc * R_ac * go_return / (u_source * I_calc + p_loss_kw * kw_scale) * 100"},{"id":"s_kva","label":"电源点容量要求","unit":"kVA","op":"expr","expr":"u_source * I_calc / power_factor / kw_scale + p_loss_kw"},{"id":"voltage_class","label":"电压损失验证结论","op":"classify","using":"single_phase_voltage"},{"id":"ampacity_class","label":"载流量验证结论","op":"classify","using":"ampacity"},{"id":"power_class","label":"功率损失参考结论","op":"classify","using":"power_loss"}],"three_phase":[{"id":"I_calc","label":"计算电流","unit":"A","op":"expr","expr":"limit_a if (obc_a / 3) >= limit_a else (obc_a / 3)"},{"id":"dU","label":"线路电压损失值 Δu","unit":"V","op":"expr","expr":"I_calc * R_dc * go_return"},{"id":"dU_ab","label":"Δu AB","unit":"V","op":"expr","expr":"dU"},{"id":"dU_bc","label":"Δu BC","unit":"V","op":"expr","expr":"dU"},{"id":"dU_ca","label":"Δu CA","unit":"V","op":"expr","expr":"dU"},{"id":"dU_pct_ab","label":"Δu% AB","unit":"%","op":"expr","expr":"I_calc * R_dc * go_return / u_ab * 100"},{"id":"dU_pct_bc","label":"Δu% BC","unit":"%","op":"expr","expr":"I_calc * R_dc * go_return / u_bc * 100"},{"id":"dU_pct_ca","label":"Δu% CA","unit":"%","op":"expr","expr":"I_calc * R_dc * go_return / u_ca * 100"},{"id":"u_end_ab","label":"UT AB","unit":"V","op":"expr","expr":"u_ab - dU"},{"id":"u_end_bc","label":"UT BC","unit":"V","op":"expr","expr":"u_bc - dU"},{"id":"u_end_ca","label":"UT CA","unit":"V","op":"expr","expr":"u_ca - dU"},{"id":"u_end_table","label":"原表规则下的末端电压（用于分级）","unit":"V","op":"expr","expr":"u_end_ca if (u_end_ca < u_end_bc) else (u_end_bc if (u_end_bc < u_end_ab) else u_end_ab)","remark":"完全按原表：先取 AB；若 BC<AB 则改取 BC；再若 CA<BC 则改取 CA。不是三者取最小。"},{"id":"p_loss_kw","label":"最大热损失功率 Pl","unit":"kW","op":"expr","expr":"I_calc * I_calc * R_ac * 3 / kw_scale"},{"id":"p_loss_pct","label":"最大热损失功率百分数 ΔPl%","unit":"%","op":"expr","expr":"I_calc * I_calc * R_ac * 3 / ((u_ab + u_bc + u_ca) * I_calc / sqrt3 + I_calc * I_calc * R_ac * 3) * 100"},{"id":"s_kva","label":"电源点容量要求","unit":"kVA","op":"expr","expr":"((u_ab + u_bc + u_ca) * I_calc / sqrt3) / kw_scale / power_factor + I_calc * I_calc * R_ac * 3 / kw_scale"},{"id":"voltage_class","label":"电压损失验证结论","op":"classify","using":"three_phase_voltage"},{"id":"ampacity_class","label":"载流量验证结论","op":"classify","using":"ampacity"},{"id":"power_class","label":"功率损失参考结论","op":"classify","using":"power_loss"}]},"fixtures":[{"id":"sp_workbook_current","mode":"single_phase","from":"SP 工作表当前已计算结果","inputs":{"cable_type":"YJV","obc_a":48,"limit_a":32,"ambient_c":25,"u_source":220,"len_conduit":50,"len_ladder":0,"len_solid_tray":0,"len_ceiling":0,"len_brick":0,"len_direct_bury":0,"len_pipe_bury":0,"temp_direct_bury":25,"temp_pipe_bury":25,"section_mm2":6},"expect":{"R_dc":0.169592,"R_ac":0.169592,"dU_pct":4.9335854545454545,"dU":10.853888,"u_end":209.146112,"I_c":33.54838709677419,"p_loss_pct":4.701626684320777,"p_loss_kw":0.34732441599999997,"s_kva":7.605056285858154,"voltage_class":"低电压损失","ampacity_class":"足够","power_class":"低功率损失"}},{"id":"tp_workbook_current","mode":"three_phase","from":"TP 工作表当前已计算结果","inputs":{"cable_type":"YJV","obc_a":48,"limit_a":32,"ambient_c":25,"u_ab":380,"u_bc":380,"u_ca":380,"len_conduit":100,"len_ladder":0,"len_solid_tray":0,"len_ceiling":0,"len_brick":0,"len_direct_bury":0,"len_pipe_bury":0,"temp_direct_bury":25,"temp_pipe_bury":25,"section_mm2":6},"expect":{"R_dc":0.339184,"R_ac":0.339184,"dU_pct_ab":2.8562863157894736,"dU_pct_bc":2.8562863157894736,"dU_pct_ca":2.8562863157894736,"dU":10.853888,"u_end_ab":369.146112,"u_end_bc":369.146112,"u_end_ca":369.146112,"I_c":33.54838709677419,"p_loss_pct":2.413836639331325,"p_loss_kw":0.260493312,"s_kva":11.117377281188965,"voltage_class":"低电压损失","ampacity_class":"足够","power_class":"低功率损失"}}]};
+  </script>
+  <script>
+/* 用途：按 formula.json 的步骤计算，不把公式写死在页面里 */
+
+(function (root) {
+  "use strict";
+
+  function tokenize(src) {
+    var tokens = [];
+    var i = 0;
+    var s = src;
+    while (i < s.length) {
+      var ch = s[i];
+      if (ch === " " || ch === "\t" || ch === "\n") {
+        i += 1;
+        continue;
+      }
+      if ((ch >= "0" && ch <= "9") || (ch === "." && i + 1 < s.length && s[i + 1] >= "0" && s[i + 1] <= "9")) {
+        var num = "";
+        while (i < s.length && ((s[i] >= "0" && s[i] <= "9") || s[i] === ".")) {
+          num += s[i];
+          i += 1;
+        }
+        tokens.push({ t: "num", v: parseFloat(num) });
+        continue;
+      }
+      if ((ch >= "a" && ch <= "z") || (ch >= "A" && ch <= "Z") || ch === "_") {
+        var id = "";
+        while (i < s.length && ((s[i] >= "a" && s[i] <= "z") || (s[i] >= "A" && s[i] <= "Z") || (s[i] >= "0" && s[i] <= "9") || s[i] === "_")) {
+          id += s[i];
+          i += 1;
+        }
+        if (id === "if" || id === "else" || id === "and" || id === "or" || id === "not") {
+          tokens.push({ t: id });
+        } else {
+          tokens.push({ t: "id", v: id });
+        }
+        continue;
+      }
+      var two = s.slice(i, i + 2);
+      if (two === "<=" || two === ">=" || two === "!=" || two === "==") {
+        tokens.push({ t: "op", v: two });
+        i += 2;
+        continue;
+      }
+      if ("+-*/%()<>,".indexOf(ch) !== -1) {
+        tokens.push({ t: "op", v: ch });
+        i += 1;
+        continue;
+      }
+      throw new Error("无法识别的符号: " + ch);
+    }
+    tokens.push({ t: "end" });
+    return tokens;
+  }
+
+  function Parser(tokens, env) {
+    this.tokens = tokens;
+    this.i = 0;
+    this.env = env;
+  }
+
+  Parser.prototype.peek = function () {
+    return this.tokens[this.i];
+  };
+
+  Parser.prototype.eat = function (kind, value) {
+    var cur = this.peek();
+    if (kind && cur.t !== kind) {
+      throw new Error("表达式格式不对");
+    }
+    if (value && (cur.v !== value && cur.t !== value)) {
+      throw new Error("表达式格式不对");
+    }
+    this.i += 1;
+    return cur;
+  };
+
+  Parser.prototype.parse = function () {
+    var v = this.parseTernary();
+    if (this.peek().t !== "end") {
+      throw new Error("表达式未读完");
+    }
+    return v;
+  };
+
+  Parser.prototype.parseTernary = function () {
+    var left = this.parseOr();
+    if (this.peek().t === "if") {
+      this.eat("if");
+      var cond = this.parseOr();
+      if (this.peek().t !== "else") {
+        throw new Error("缺少 else");
+      }
+      this.eat("else");
+      var right = this.parseTernary();
+      return cond ? left : right;
+    }
+    return left;
+  };
+
+  Parser.prototype.parseOr = function () {
+    var v = this.parseAnd();
+    while (this.peek().t === "or") {
+      this.eat("or");
+      var r = this.parseAnd();
+      v = v || r;
+    }
+    return v;
+  };
+
+  Parser.prototype.parseAnd = function () {
+    var v = this.parseNot();
+    while (this.peek().t === "and") {
+      this.eat("and");
+      var r = this.parseNot();
+      v = v && r;
+    }
+    return v;
+  };
+
+  Parser.prototype.parseNot = function () {
+    if (this.peek().t === "not") {
+      this.eat("not");
+      return !this.parseNot();
+    }
+    return this.parseCompare();
+  };
+
+  Parser.prototype.parseCompare = function () {
+    var v = this.parseAdd();
+    while (this.peek().t === "op" && ["<", ">", "<=", ">=", "==", "!="].indexOf(this.peek().v) !== -1) {
+      var op = this.eat("op").v;
+      var r = this.parseAdd();
+      if (op === "<") v = v < r;
+      else if (op === ">") v = v > r;
+      else if (op === "<=") v = v <= r;
+      else if (op === ">=") v = v >= r;
+      else if (op === "==") v = v === r;
+      else v = v !== r;
+    }
+    return v;
+  };
+
+  Parser.prototype.parseAdd = function () {
+    var v = this.parseMul();
+    while (this.peek().t === "op" && (this.peek().v === "+" || this.peek().v === "-")) {
+      var op = this.eat("op").v;
+      var r = this.parseMul();
+      v = op === "+" ? v + r : v - r;
+    }
+    return v;
+  };
+
+  Parser.prototype.parseMul = function () {
+    var v = this.parseUnary();
+    while (this.peek().t === "op" && (this.peek().v === "*" || this.peek().v === "/" || this.peek().v === "%")) {
+      var op = this.eat("op").v;
+      var r = this.parseUnary();
+      if (op === "*") v = v * r;
+      else if (op === "/") v = v / r;
+      else v = v % r;
+    }
+    return v;
+  };
+
+  Parser.prototype.parseUnary = function () {
+    if (this.peek().t === "op" && (this.peek().v === "+" || this.peek().v === "-")) {
+      var op = this.eat("op").v;
+      var v = this.parseUnary();
+      return op === "-" ? -v : v;
+    }
+    return this.parsePrimary();
+  };
+
+  Parser.prototype.parsePrimary = function () {
+    var cur = this.peek();
+    if (cur.t === "num") {
+      this.eat("num");
+      return cur.v;
+    }
+    if (cur.t === "id") {
+      this.eat("id");
+      if (this.peek().t === "op" && this.peek().v === "(") {
+        this.eat("op", "(");
+        var args = [];
+        if (!(this.peek().t === "op" && this.peek().v === ")")) {
+          args.push(this.parseTernary());
+          while (this.peek().t === "op" && this.peek().v === ",") {
+            this.eat("op", ",");
+            args.push(this.parseTernary());
+          }
+        }
+        this.eat("op", ")");
+        return callFn(cur.v, args);
+      }
+      if (!(cur.v in this.env)) {
+        throw new Error("缺少参数: " + cur.v);
+      }
+      return this.env[cur.v];
+    }
+    if (cur.t === "op" && cur.v === "(") {
+      this.eat("op", "(");
+      var v = this.parseTernary();
+      this.eat("op", ")");
+      return v;
+    }
+    throw new Error("表达式格式不对");
+  };
+
+  function callFn(name, args) {
+    if (name === "max") {
+      return Math.max.apply(null, args);
+    }
+    if (name === "min") {
+      return Math.min.apply(null, args);
+    }
+    throw new Error("不支持的函数: " + name);
+  }
+
+  function evalExpr(expr, env) {
+    var parser = new Parser(tokenize(expr), env);
+    return parser.parse();
+  }
+
+  function lookupAir(cfg, section, ambient, mode) {
+    var rows = cfg.tables.air_ampacity.rows;
+    var key = String(ambient);
+    var i;
+    for (i = 0; i < rows.length; i += 1) {
+      if (rows[i].section_mm2 === section && key in rows[i]) {
+        return rows[i][key];
+      }
+    }
+    var overflow = cfg.tables.air_ampacity_overflow[mode];
+    var overflowExpr = overflow[String(section)] || "0";
+    return evalExpr(overflowExpr, { ambient_c: ambient });
+  }
+
+  function lookupBury(cfg, section, temp) {
+    var rows = cfg.tables.bury_ampacity.rows;
+    var key = String(temp);
+    var i;
+    for (i = 0; i < rows.length; i += 1) {
+      if (rows[i].section_mm2 === section && key in rows[i]) {
+        return rows[i][key];
+      }
+    }
+    return cfg.tables.bury_ampacity.missingMeans || 0;
+  }
+
+  function runAmpacity(cfg, env, mode) {
+    if (env.is_buried) {
+      env.I_c_raw = lookupBury(cfg, env.section_mm2, env.bury_temp_c);
+      env.I_c = env.I_c_raw;
+      return;
+    }
+    env.I_c_raw = lookupAir(cfg, env.section_mm2, env.ambient_c, mode);
+    var ic = env.I_c_raw;
+    if (ic !== 0) {
+      if (env.len_solid_tray !== 0) {
+        ic = ic * cfg.constants.air_derate_tray;
+      }
+      if (env.len_conduit !== 0 || env.len_ceiling !== 0 || env.len_brick !== 0) {
+        ic = ic / cfg.constants.air_derate_tray * cfg.constants.air_derate_conduit;
+      }
+    }
+    env.I_c = ic;
+  }
+
+  function classify(cfg, using, env) {
+    var rules = cfg.thresholds[using];
+    var i;
+    for (i = 0; i < rules.length; i += 1) {
+      if (evalExpr(rules[i].when, env)) {
+        return { label: rules[i].label, color: rules[i].color, id: rules[i].id };
+      }
+    }
+    return { label: "", color: "", id: "" };
+  }
+
+  function runSteps(cfg, groups, env, mode) {
+    var g;
+    var i;
+    var step;
+    for (g = 0; g < groups.length; g += 1) {
+      var steps = cfg.steps[groups[g]];
+      for (i = 0; i < steps.length; i += 1) {
+        step = steps[i];
+        if (step.op === "expr") {
+          env[step.id] = evalExpr(step.expr, env);
+        } else if (step.op === "assert") {
+          if (!evalExpr(step.expr, env)) {
+            var err = new Error(step.message || "输入不满足计算条件");
+            err.code = "assert";
+            throw err;
+          }
+        } else if (step.op === "ampacity_lookup") {
+          runAmpacity(cfg, env, mode);
+        } else if (step.op === "air_derate") {
+          continue;
+        } else if (step.op === "classify") {
+          var cls = classify(cfg, step.using, env);
+          env[step.id] = cls.label;
+          env[step.id + "_meta"] = cls;
+        } else {
+          throw new Error("未知步骤: " + step.op);
+        }
+      }
+    }
+  }
+
+  function calculate(cfg, mode, inputs) {
+    var env = {};
+    var key;
+    for (key in cfg.constants) {
+      if (Object.prototype.hasOwnProperty.call(cfg.constants, key)) {
+        env[key] = cfg.constants[key];
+      }
+    }
+    for (key in inputs) {
+      if (Object.prototype.hasOwnProperty.call(inputs, key)) {
+        env[key] = inputs[key];
+      }
+    }
+    runSteps(cfg, ["shared_length", "resistance", "ampacity", mode], env, mode);
+    return env;
+  }
+
+  root.VoltageDropEngine = {
+    evalExpr: evalExpr,
+    calculate: calculate
+  };
+})(window);
+
+  </script>
+  <script>
+(function () {
+  "use strict";
+
+  var HISTORY_KEY = "hc_voltage_drop_history_v1";
+  var HISTORY_MAX = 10;
+  var cfg = null;
+  var mode = "single_phase";
+  var fieldsEl = document.getElementById("formFields");
+  var resultBox = document.getElementById("resultBox");
+  var errorBox = document.getElementById("errorBox");
+  var historyBox = document.getElementById("historyBox");
+
+  function $(id) {
+    return document.getElementById(id);
+  }
+
+  function num(v) {
+    var n = parseFloat(v);
+    return isNaN(n) ? 0 : n;
+  }
+
+  function fmtNum(v) {
+    if (typeof v !== "number" || !isFinite(v)) return "—";
+    return v.toFixed(2);
+  }
+
+  function badgeClass(color) {
+    if (color === "green") return "badge green";
+    if (color === "yellow") return "badge yellow";
+    if (color === "orange") return "badge orange";
+    if (color === "red") return "badge red";
+    return "badge";
+  }
+
+  function fieldHtml(spec, extraClass) {
+    var id = spec.id;
+    var unit = spec.unit ? '<span class="unit">' + spec.unit + "</span>" : "";
+    var hint = spec.remark ? '<div class="hint">' + spec.remark + "</div>" : "";
+    var control;
+    if (spec.type === "select") {
+      var opts = spec.options.map(function (opt) {
+        var selected = String(opt) === String(spec.default) ? " selected" : "";
+        return "<option value=\"" + opt + "\"" + selected + ">" + opt + "</option>";
+      }).join("");
+      control = "<select id=\"f_" + id + "\">" + opts + "</select>";
+    } else {
+      var min = spec.min != null ? " min=\"" + spec.min + "\"" : "";
+      var max = spec.max != null ? " max=\"" + spec.max + "\"" : "";
+      control = "<input id=\"f_" + id + "\" type=\"number\" inputmode=\"decimal\" step=\"1\" value=\"" + spec.default + "\"" + min + max + ">";
+    }
+    return '<div class="field ' + (extraClass || "") + '" data-id="' + id + '"><label><span>' + spec.label + "</span>" + unit + "</label>" + control + hint + "</div>";
+  }
+
+  function allSpecs() {
+    return cfg.inputs.common
+      .concat(cfg.inputs.single_phase)
+      .concat(cfg.inputs.three_phase)
+      .concat(cfg.inputs.lengths)
+      .concat(cfg.inputs.bury_temps);
+  }
+
+  function renderForm() {
+    var html = "";
+    cfg.inputs.common.forEach(function (spec) {
+      html += fieldHtml(spec);
+    });
+    if (mode === "single_phase") {
+      cfg.inputs.single_phase.forEach(function (spec) {
+        html += fieldHtml(spec);
+      });
+    } else {
+      cfg.inputs.three_phase.forEach(function (spec) {
+        html += fieldHtml(spec);
+      });
+    }
+    html += "<h2 style=\"margin-top:16px\">敷设方式及长度</h2>";
+    cfg.inputs.lengths.forEach(function (spec) {
+      html += fieldHtml(spec);
+    });
+    cfg.inputs.bury_temps.forEach(function (spec) {
+      html += fieldHtml(spec);
+    });
+    fieldsEl.innerHTML = html;
+    fieldsEl.querySelectorAll("input, select").forEach(function (el) {
+      el.addEventListener("input", liveCalc);
+      el.addEventListener("change", liveCalc);
+    });
+    liveCalc();
+  }
+
+  function readInputs() {
+    var inputs = {};
+    allSpecs().forEach(function (spec) {
+      var el = $("f_" + spec.id);
+      var fallback = spec.default;
+      if (!el) {
+        inputs[spec.id] = typeof fallback === "number" ? fallback : fallback;
+        return;
+      }
+      if (spec.type === "select") {
+        var raw = el.value;
+        inputs[spec.id] = typeof spec.options[0] === "number" ? num(raw) : raw;
+      } else {
+        inputs[spec.id] = num(el.value);
+      }
+    });
+    return inputs;
+  }
+
+  function validateInputs(inputs) {
+    var messages = [];
+    function checkRange(spec, value) {
+      if (spec.min != null && value < spec.min) messages.push(spec.label + "应不小于 " + spec.min);
+      if (spec.max != null && value > spec.max) messages.push(spec.label + "应不大于 " + spec.max);
+    }
+    if (mode === "single_phase") {
+      cfg.inputs.single_phase.forEach(function (spec) {
+        checkRange(spec, inputs[spec.id]);
+      });
+    } else {
+      cfg.inputs.three_phase.forEach(function (spec) {
+        checkRange(spec, inputs[spec.id]);
+      });
+    }
+    cfg.inputs.lengths.forEach(function (spec) {
+      checkRange(spec, inputs[spec.id]);
+    });
+    if (inputs.len_direct_bury !== 0 && (inputs.temp_direct_bury === "" || inputs.temp_direct_bury == null)) {
+      messages.push("直埋地长度不为 0 时需要填写埋地温度");
+    }
+    if (inputs.len_pipe_bury !== 0 && (inputs.temp_pipe_bury === "" || inputs.temp_pipe_bury == null)) {
+      messages.push("穿管埋地长度不为 0 时需要填写埋地温度");
+    }
+    return messages;
+  }
+
+  function row(label, value, unit) {
+    return '<div class="result-row"><span>' + label + "</span><b>" + value + (unit ? " " + unit : "") + "</b></div>";
+  }
+
+  function renderResult(result) {
+    errorBox.hidden = true;
+    var vMeta = result.voltage_class_meta || {};
+    var aMeta = result.ampacity_class_meta || {};
+    var pMeta = result.power_class_meta || {};
+    var html = "";
+    if (mode === "single_phase") {
+      html += '<div class="kpi">';
+      html += '<div class="item"><span>压降 Δu</span><b>' + fmtNum(result.dU) + " V</b></div>";
+      html += '<div class="item"><span>压降百分比</span><b>' + fmtNum(result.dU_pct) + "%</b></div>";
+      html += '<div class="item wide"><span>末端电压</span><b>' + fmtNum(result.u_end) + " V</b>";
+      html += '<span class="' + badgeClass(vMeta.color) + '">' + (result.voltage_class || "") + "</span></div>";
+      html += "</div>";
+    } else {
+      html += '<div class="kpi">';
+      html += '<div class="item"><span>压降 Δu</span><b>' + fmtNum(result.dU) + " V</b></div>";
+      html += '<div class="item"><span>计算电流</span><b>' + fmtNum(result.I_calc) + " A</b></div>";
+      html += '<div class="item"><span>Δu% AB</span><b>' + fmtNum(result.dU_pct_ab) + "%</b></div>";
+      html += '<div class="item"><span>Δu% BC</span><b>' + fmtNum(result.dU_pct_bc) + "%</b></div>";
+      html += '<div class="item"><span>Δu% CA</span><b>' + fmtNum(result.dU_pct_ca) + "%</b></div>";
+      html += '<div class="item wide"><span>末端电压 AB / BC / CA</span><b>' + fmtNum(result.u_end_ab) + " / " + fmtNum(result.u_end_bc) + " / " + fmtNum(result.u_end_ca) + " V</b>";
+      html += '<span class="' + badgeClass(vMeta.color) + '">' + (result.voltage_class || "") + "</span></div>";
+      html += "</div>";
+    }
+    html += row("直流电阻 Rθ", fmtNum(result.R_dc), "Ω");
+    html += row("交流电阻 Rj", fmtNum(result.R_ac), "Ω");
+    html += row("电缆总长度", fmtNum(result.L), "m");
+    html += row("电缆载流量 IC", fmtNum(result.I_c), "A");
+    html += '<div class="result-row"><span>载流量验证</span><span class="' + badgeClass(aMeta.color) + '">' + (result.ampacity_class || "") + "</span></div>";
+    html += row("热损失功率", fmtNum(result.p_loss_kw), "kW");
+    html += row("热损失百分数", fmtNum(result.p_loss_pct), "%");
+    html += '<div class="result-row"><span>功率损失</span><span class="' + badgeClass(pMeta.color) + '">' + (result.power_class || "") + "</span></div>";
+    html += row("电源点容量", fmtNum(result.s_kva), "kVA");
+    resultBox.innerHTML = html;
+  }
+
+  function showError(msg) {
+    errorBox.hidden = false;
+    errorBox.textContent = msg;
+    resultBox.innerHTML = "";
+  }
+
+  function liveCalc() {
+    if (!cfg) return null;
+    var inputs = readInputs();
+    var msgs = validateInputs(inputs);
+    if (msgs.length) {
+      showError(msgs.join("；"));
+      return null;
+    }
+    try {
+      var result = window.VoltageDropEngine.calculate(cfg, mode, inputs);
+      renderResult(result);
+      return { inputs: inputs, result: result };
+    } catch (e) {
+      showError(e.message || "计算失败");
+      return null;
+    }
+  }
+
+  function loadHistory() {
+    try {
+      var raw = localStorage.getItem(HISTORY_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveHistory(list) {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(list.slice(0, HISTORY_MAX)));
+  }
+
+  function renderHistory() {
+    var list = loadHistory();
+    if (!list.length) {
+      historyBox.innerHTML = '<p class="hint">还没有保存的记录。</p>';
+      return;
+    }
+    historyBox.innerHTML = list.map(function (item, idx) {
+      var title = item.mode === "three_phase" ? "三相" : "单相";
+      var extra = item.mode === "three_phase"
+        ? "末端 " + fmtNum(item.u_end_ab) + "/" + fmtNum(item.u_end_bc) + "/" + fmtNum(item.u_end_ca) + " V"
+        : "末端 " + fmtNum(item.u_end) + " V";
+      return '<div class="history-item" data-idx="' + idx + '">'
+        + '<p class="time">' + item.time + " · " + title + " · 公式 " + item.formulaVersion + "</p>"
+        + "<p>" + item.section_mm2 + " mm² · " + item.limit_a + " A · 总长 " + fmtNum(item.L) + " m · 压降 " + fmtNum(item.dU) + " V · " + extra + "</p>"
+        + '<p class="hint">' + (item.voltage_class || "") + " · " + (item.ampacity_class || "") + " · " + (item.power_class || "") + "</p>"
+        + "</div>";
+    }).join("");
+  }
+
+  function snapshot(payload) {
+    var r = payload.result;
+    var i = payload.inputs;
+    return {
+      time: new Date().toLocaleString("zh-CN", { hour12: false }),
+      formulaVersion: cfg.version,
+      mode: mode,
+      section_mm2: i.section_mm2,
+      limit_a: i.limit_a,
+      L: r.L,
+      dU: r.dU,
+      u_end: r.u_end,
+      u_end_ab: r.u_end_ab,
+      u_end_bc: r.u_end_bc,
+      u_end_ca: r.u_end_ca,
+      voltage_class: r.voltage_class,
+      ampacity_class: r.ampacity_class,
+      power_class: r.power_class
+    };
+  }
+
+  function setMode(next) {
+    mode = next;
+    $("modeSingle").classList.toggle("active", mode === "single_phase");
+    $("modeThree").classList.toggle("active", mode === "three_phase");
+    renderForm();
+  }
+
+  $("modeSingle").addEventListener("click", function () { setMode("single_phase"); });
+  $("modeThree").addEventListener("click", function () { setMode("three_phase"); });
+  $("btnCalc").addEventListener("click", function () {
+    var payload = liveCalc();
+    if (!payload) return;
+    var list = loadHistory();
+    list.unshift(snapshot(payload));
+    saveHistory(list);
+    renderHistory();
+  });
+  $("btnReset").addEventListener("click", function () {
+    renderForm();
+  });
+  $("btnClear").addEventListener("click", function () {
+    if (!window.confirm("清空这台手机上保存的最近计算记录？不会影响当前填写的参数。")) return;
+    localStorage.removeItem(HISTORY_KEY);
+    renderHistory();
+  });
+
+  function boot(data) {
+    cfg = data;
+    $("formulaVersion").textContent = "公式版本 " + cfg.version + " · 来源 " + cfg.source.workbookVersion + " · 记录只留在本机";
+    renderForm();
+    renderHistory();
+  }
+
+  if (window.EMBEDDED_FORMULA) {
+    boot(window.EMBEDDED_FORMULA);
+  } else {
+    fetch("config/formula.json", { cache: "no-store" })
+      .then(function (resp) {
+        if (!resp.ok) throw new Error("无法加载公式配置");
+        return resp.json();
+      })
+      .then(boot)
+      .catch(function (err) {
+        $("formulaVersion").textContent = "公式配置加载失败";
+        showError(err.message || "公式配置加载失败。请用本地网页服务打开，或使用单文件版「压降验证测算.html」。");
+      });
+  }
+
+  if ("serviceWorker" in navigator && window.location.protocol !== "file:") {
+    navigator.serviceWorker.register("sw.js");
+  }
+})();
+
+  </script>
+</body>
+</html>
