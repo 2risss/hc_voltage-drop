@@ -1,0 +1,590 @@
+{
+  "version": "1.0.0",
+  "title": "压降验证测算",
+  "source": {
+    "workbook": "压降计算公式.xlsm",
+    "workbookVersion": "V1.1",
+    "sheets": ["SP", "TP"],
+    "notes": "计算步骤来自原表宏 cal1/cal2。网页只解释执行本 JSON，不把公式写死在页面代码里。"
+  },
+  "constants": {
+    "resistivity_20c": 1.72,
+    "resistivity_scale": 100,
+    "temp_coeff": 0.004,
+    "conductor_temp_c": 60,
+    "ref_temp_c": 20,
+    "resistance_factor": 1.02,
+    "go_return": 2,
+    "power_factor": 0.97,
+    "sqrt3": 1.732,
+    "max_length_m": 500,
+    "kw_scale": 1000,
+    "air_derate_tray": 0.93,
+    "air_derate_conduit": 0.78
+  },
+  "inputs": {
+    "common": [
+      {
+        "id": "cable_type",
+        "label": "电缆类型",
+        "unit": "",
+        "type": "select",
+        "options": ["YJV", "YJV22"],
+        "default": "YJV",
+        "usedIn": [],
+        "remark": "原公式未使用，界面保留作备注。"
+      },
+      {
+        "id": "obc_a",
+        "label": "车载充电机",
+        "unit": "A",
+        "type": "select",
+        "options": [48, 72, 96],
+        "default": 48,
+        "usedIn": ["three_phase"],
+        "remark": "单相原公式未使用，界面保留作备注；三相用于取计算电流。"
+      },
+      {
+        "id": "limit_a",
+        "label": "充电器限流设置",
+        "unit": "A",
+        "type": "select",
+        "options": [6, 8, 10, 13, 16, 20, 25, 32],
+        "default": 32
+      },
+      {
+        "id": "ambient_c",
+        "label": "环境温度",
+        "unit": "℃",
+        "type": "select",
+        "options": [25, 30, 35, 40],
+        "default": 25,
+        "remark": "只用于空气敷设载流量，不用于电阻。"
+      },
+      {
+        "id": "section_mm2",
+        "label": "电缆主线芯线径",
+        "unit": "mm²",
+        "type": "select",
+        "options": [6, 10, 16, 25, 35],
+        "default": 6
+      }
+    ],
+    "single_phase": [
+      {
+        "id": "u_source",
+        "label": "电源点电压",
+        "unit": "V",
+        "type": "number",
+        "min": 198,
+        "max": 242,
+        "default": 220
+      }
+    ],
+    "three_phase": [
+      {
+        "id": "u_ab",
+        "label": "电源点电压 UAB",
+        "unit": "V",
+        "type": "number",
+        "min": 342,
+        "max": 418,
+        "default": 380
+      },
+      {
+        "id": "u_bc",
+        "label": "电源点电压 UBC",
+        "unit": "V",
+        "type": "number",
+        "min": 342,
+        "max": 418,
+        "default": 380
+      },
+      {
+        "id": "u_ca",
+        "label": "电源点电压 UCA",
+        "unit": "V",
+        "type": "number",
+        "min": 342,
+        "max": 418,
+        "default": 380
+      }
+    ],
+    "lengths": [
+      {
+        "id": "len_conduit",
+        "label": "穿管明敷、线槽",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      },
+      {
+        "id": "len_ladder",
+        "label": "有孔托盘、梯架、桥架",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      },
+      {
+        "id": "len_solid_tray",
+        "label": "无孔托盘",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      },
+      {
+        "id": "len_ceiling",
+        "label": "吊顶、架空地板",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      },
+      {
+        "id": "len_brick",
+        "label": "砖墙、孔道内",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      },
+      {
+        "id": "len_direct_bury",
+        "label": "直埋地",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      },
+      {
+        "id": "len_pipe_bury",
+        "label": "穿管埋地",
+        "unit": "m",
+        "type": "number",
+        "min": 0,
+        "max": 500,
+        "default": 0
+      }
+    ],
+    "bury_temps": [
+      {
+        "id": "temp_direct_bury",
+        "label": "直埋地温度",
+        "unit": "℃",
+        "type": "select",
+        "options": [20, 25, 30],
+        "default": 25,
+        "requiredIf": "len_direct_bury != 0"
+      },
+      {
+        "id": "temp_pipe_bury",
+        "label": "穿管埋地温度",
+        "unit": "℃",
+        "type": "select",
+        "options": [20, 25, 30],
+        "default": 25,
+        "requiredIf": "len_pipe_bury != 0"
+      }
+    ]
+  },
+  "tables": {
+    "air_ampacity": {
+      "by": ["section_mm2", "ambient_c"],
+      "rows": [
+        {"section_mm2": 6, "25": 40, "30": 38, "35": 36, "40": 34},
+        {"section_mm2": 10, "25": 78, "30": 75, "35": 72, "40": 68},
+        {"section_mm2": 16, "25": 104, "30": 100, "35": 96, "40": 91},
+        {"section_mm2": 25, "25": 132, "30": 127, "35": 122, "40": 116},
+        {"section_mm2": 35, "25": 164, "30": 158, "35": 152, "40": 144}
+      ]
+    },
+    "air_ampacity_overflow": {
+      "single_phase": {
+        "6": "34 - (ambient_c - 40) * 2",
+        "10": "0",
+        "16": "0",
+        "25": "0",
+        "35": "0"
+      },
+      "three_phase": {
+        "6": "34 - (ambient_c - 40) * 2",
+        "10": "68 - (ambient_c - 40) * 3",
+        "16": "91 - (ambient_c - 40) * 4",
+        "25": "116 - (ambient_c - 40) * 5",
+        "35": "0"
+      }
+    },
+    "bury_ampacity": {
+      "by": ["section_mm2", "bury_temp_c"],
+      "rows": [
+        {"section_mm2": 10, "20": 52, "25": 49, "30": 46},
+        {"section_mm2": 16, "20": 67, "25": 64, "30": 60},
+        {"section_mm2": 25, "20": 86, "25": 82, "30": 77},
+        {"section_mm2": 35, "20": 103, "25": 98, "30": 92}
+      ],
+      "missingMeans": 0
+    }
+  },
+  "thresholds": {
+    "single_phase_voltage": [
+      {"id": "too_high", "label": "过高电压损失", "when": "u_end < 185", "color": "red"},
+      {"id": "high", "label": "高电压损失", "when": "u_end >= 185 and u_end < 198", "color": "orange"},
+      {"id": "medium", "label": "中电压损失", "when": "u_end >= 198 and u_end < 209", "color": "yellow"},
+      {"id": "low", "label": "低电压损失", "when": "u_end >= 209", "color": "green"}
+    ],
+    "three_phase_voltage": [
+      {"id": "too_high", "label": "过高电压损失", "when": "u_end_table < 320", "color": "red"},
+      {"id": "high", "label": "高电压损失", "when": "u_end_table >= 320 and u_end_table < 342", "color": "orange"},
+      {"id": "medium", "label": "中电压损失", "when": "u_end_table >= 342 and u_end_table < 361", "color": "yellow"},
+      {"id": "low", "label": "低电压损失", "when": "u_end_table >= 361", "color": "green"}
+    ],
+    "ampacity": [
+      {"id": "ok", "label": "足够", "when": "I_c >= I_calc", "color": "green"},
+      {"id": "short", "label": "不足", "when": "I_c < I_calc", "color": "red"}
+    ],
+    "power_loss": [
+      {"id": "low", "label": "低功率损失", "when": "p_loss_pct < 5", "color": "green"},
+      {"id": "medium", "label": "中功率损失", "when": "p_loss_pct >= 5 and p_loss_pct < 10", "color": "yellow"},
+      {"id": "high", "label": "高功率损失", "when": "p_loss_pct >= 10", "color": "red"}
+    ]
+  },
+  "steps": {
+    "shared_length": [
+      {
+        "id": "L",
+        "label": "电缆总长度",
+        "unit": "m",
+        "op": "expr",
+        "expr": "len_conduit + len_ladder + len_solid_tray + len_ceiling + len_brick + len_direct_bury + len_pipe_bury"
+      },
+      {
+        "id": "length_ok",
+        "op": "assert",
+        "expr": "L <= max_length_m",
+        "message": "电缆总长超过500米!"
+      }
+    ],
+    "resistance": [
+      {
+        "id": "R_dc",
+        "label": "直流电阻 Rθ",
+        "unit": "Ω",
+        "op": "expr",
+        "expr": "((resistivity_20c / resistivity_scale) * (1 + temp_coeff * (conductor_temp_c - ref_temp_c)) * resistance_factor * L) / section_mm2"
+      },
+      {
+        "id": "R_ac",
+        "label": "交流电阻 Rj",
+        "unit": "Ω",
+        "op": "expr",
+        "expr": "R_dc"
+      }
+    ],
+    "ampacity": [
+      {
+        "id": "is_buried",
+        "op": "expr",
+        "expr": "(len_direct_bury != 0) or (len_pipe_bury != 0)"
+      },
+      {
+        "id": "bury_temp_c",
+        "op": "expr",
+        "expr": "max(temp_direct_bury if len_direct_bury != 0 else 0, temp_pipe_bury if len_pipe_bury != 0 else 0) if is_buried else 0"
+      },
+      {
+        "id": "I_c_raw",
+        "op": "ampacity_lookup"
+      },
+      {
+        "id": "I_c",
+        "label": "电缆载流量 IC",
+        "unit": "A",
+        "op": "air_derate"
+      }
+    ],
+    "single_phase": [
+      {
+        "id": "I_calc",
+        "label": "计算电流",
+        "unit": "A",
+        "op": "expr",
+        "expr": "limit_a"
+      },
+      {
+        "id": "dU",
+        "label": "线路电压损失值 Δu",
+        "unit": "V",
+        "op": "expr",
+        "expr": "I_calc * R_dc * go_return"
+      },
+      {
+        "id": "dU_pct",
+        "label": "线路电压损失百分数 Δu%",
+        "unit": "%",
+        "op": "expr",
+        "expr": "I_calc * R_dc * go_return / u_source * 100"
+      },
+      {
+        "id": "u_end",
+        "label": "充电器端电压 U",
+        "unit": "V",
+        "op": "expr",
+        "expr": "u_source - dU"
+      },
+      {
+        "id": "p_loss_kw",
+        "label": "最大热损失功率 Pl",
+        "unit": "kW",
+        "op": "expr",
+        "expr": "I_calc * I_calc * R_ac * go_return / kw_scale"
+      },
+      {
+        "id": "p_loss_pct",
+        "label": "最大热损失功率百分数 ΔPl%",
+        "unit": "%",
+        "op": "expr",
+        "expr": "I_calc * I_calc * R_ac * go_return / (u_source * I_calc + p_loss_kw * kw_scale) * 100"
+      },
+      {
+        "id": "s_kva",
+        "label": "电源点容量要求",
+        "unit": "kVA",
+        "op": "expr",
+        "expr": "u_source * I_calc / power_factor / kw_scale + p_loss_kw"
+      },
+      {
+        "id": "voltage_class",
+        "label": "电压损失验证结论",
+        "op": "classify",
+        "using": "single_phase_voltage"
+      },
+      {
+        "id": "ampacity_class",
+        "label": "载流量验证结论",
+        "op": "classify",
+        "using": "ampacity"
+      },
+      {
+        "id": "power_class",
+        "label": "功率损失参考结论",
+        "op": "classify",
+        "using": "power_loss"
+      }
+    ],
+    "three_phase": [
+      {
+        "id": "I_calc",
+        "label": "计算电流",
+        "unit": "A",
+        "op": "expr",
+        "expr": "limit_a if (obc_a / 3) >= limit_a else (obc_a / 3)"
+      },
+      {
+        "id": "dU",
+        "label": "线路电压损失值 Δu",
+        "unit": "V",
+        "op": "expr",
+        "expr": "I_calc * R_dc * go_return"
+      },
+      {
+        "id": "dU_ab",
+        "label": "Δu AB",
+        "unit": "V",
+        "op": "expr",
+        "expr": "dU"
+      },
+      {
+        "id": "dU_bc",
+        "label": "Δu BC",
+        "unit": "V",
+        "op": "expr",
+        "expr": "dU"
+      },
+      {
+        "id": "dU_ca",
+        "label": "Δu CA",
+        "unit": "V",
+        "op": "expr",
+        "expr": "dU"
+      },
+      {
+        "id": "dU_pct_ab",
+        "label": "Δu% AB",
+        "unit": "%",
+        "op": "expr",
+        "expr": "I_calc * R_dc * go_return / u_ab * 100"
+      },
+      {
+        "id": "dU_pct_bc",
+        "label": "Δu% BC",
+        "unit": "%",
+        "op": "expr",
+        "expr": "I_calc * R_dc * go_return / u_bc * 100"
+      },
+      {
+        "id": "dU_pct_ca",
+        "label": "Δu% CA",
+        "unit": "%",
+        "op": "expr",
+        "expr": "I_calc * R_dc * go_return / u_ca * 100"
+      },
+      {
+        "id": "u_end_ab",
+        "label": "UT AB",
+        "unit": "V",
+        "op": "expr",
+        "expr": "u_ab - dU"
+      },
+      {
+        "id": "u_end_bc",
+        "label": "UT BC",
+        "unit": "V",
+        "op": "expr",
+        "expr": "u_bc - dU"
+      },
+      {
+        "id": "u_end_ca",
+        "label": "UT CA",
+        "unit": "V",
+        "op": "expr",
+        "expr": "u_ca - dU"
+      },
+      {
+        "id": "u_end_table",
+        "label": "原表规则下的末端电压（用于分级）",
+        "unit": "V",
+        "op": "expr",
+        "expr": "u_end_ca if (u_end_ca < u_end_bc) else (u_end_bc if (u_end_bc < u_end_ab) else u_end_ab)",
+        "remark": "完全按原表：先取 AB；若 BC<AB 则改取 BC；再若 CA<BC 则改取 CA。不是三者取最小。"
+      },
+      {
+        "id": "p_loss_kw",
+        "label": "最大热损失功率 Pl",
+        "unit": "kW",
+        "op": "expr",
+        "expr": "I_calc * I_calc * R_ac * 3 / kw_scale"
+      },
+      {
+        "id": "p_loss_pct",
+        "label": "最大热损失功率百分数 ΔPl%",
+        "unit": "%",
+        "op": "expr",
+        "expr": "I_calc * I_calc * R_ac * 3 / ((u_ab + u_bc + u_ca) * I_calc / sqrt3 + I_calc * I_calc * R_ac * 3) * 100"
+      },
+      {
+        "id": "s_kva",
+        "label": "电源点容量要求",
+        "unit": "kVA",
+        "op": "expr",
+        "expr": "((u_ab + u_bc + u_ca) * I_calc / sqrt3) / kw_scale / power_factor + I_calc * I_calc * R_ac * 3 / kw_scale"
+      },
+      {
+        "id": "voltage_class",
+        "label": "电压损失验证结论",
+        "op": "classify",
+        "using": "three_phase_voltage"
+      },
+      {
+        "id": "ampacity_class",
+        "label": "载流量验证结论",
+        "op": "classify",
+        "using": "ampacity"
+      },
+      {
+        "id": "power_class",
+        "label": "功率损失参考结论",
+        "op": "classify",
+        "using": "power_loss"
+      }
+    ]
+  },
+  "fixtures": [
+    {
+      "id": "sp_workbook_current",
+      "mode": "single_phase",
+      "from": "SP 工作表当前已计算结果",
+      "inputs": {
+        "cable_type": "YJV",
+        "obc_a": 48,
+        "limit_a": 32,
+        "ambient_c": 25,
+        "u_source": 220,
+        "len_conduit": 50,
+        "len_ladder": 0,
+        "len_solid_tray": 0,
+        "len_ceiling": 0,
+        "len_brick": 0,
+        "len_direct_bury": 0,
+        "len_pipe_bury": 0,
+        "temp_direct_bury": 25,
+        "temp_pipe_bury": 25,
+        "section_mm2": 6
+      },
+      "expect": {
+        "R_dc": 0.169592,
+        "R_ac": 0.169592,
+        "dU_pct": 4.9335854545454545,
+        "dU": 10.853888,
+        "u_end": 209.146112,
+        "I_c": 33.54838709677419,
+        "p_loss_pct": 4.701626684320777,
+        "p_loss_kw": 0.34732441599999997,
+        "s_kva": 7.605056285858154,
+        "voltage_class": "低电压损失",
+        "ampacity_class": "足够",
+        "power_class": "低功率损失"
+      }
+    },
+    {
+      "id": "tp_workbook_current",
+      "mode": "three_phase",
+      "from": "TP 工作表当前已计算结果",
+      "inputs": {
+        "cable_type": "YJV",
+        "obc_a": 48,
+        "limit_a": 32,
+        "ambient_c": 25,
+        "u_ab": 380,
+        "u_bc": 380,
+        "u_ca": 380,
+        "len_conduit": 100,
+        "len_ladder": 0,
+        "len_solid_tray": 0,
+        "len_ceiling": 0,
+        "len_brick": 0,
+        "len_direct_bury": 0,
+        "len_pipe_bury": 0,
+        "temp_direct_bury": 25,
+        "temp_pipe_bury": 25,
+        "section_mm2": 6
+      },
+      "expect": {
+        "R_dc": 0.339184,
+        "R_ac": 0.339184,
+        "dU_pct_ab": 2.8562863157894736,
+        "dU_pct_bc": 2.8562863157894736,
+        "dU_pct_ca": 2.8562863157894736,
+        "dU": 10.853888,
+        "u_end_ab": 369.146112,
+        "u_end_bc": 369.146112,
+        "u_end_ca": 369.146112,
+        "I_c": 33.54838709677419,
+        "p_loss_pct": 2.413836639331325,
+        "p_loss_kw": 0.260493312,
+        "s_kva": 11.117377281188965,
+        "voltage_class": "低电压损失",
+        "ampacity_class": "足够",
+        "power_class": "低功率损失"
+      }
+    }
+  ]
+}

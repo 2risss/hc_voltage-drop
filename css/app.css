@@ -1,0 +1,234 @@
+:root {
+  --bg: #f4f5f6;
+  --card: #ffffff;
+  --text: #171a1c;
+  --muted: #5c6370;
+  --line: #e4e6e8;
+  --red: #b42318;
+  --red-dark: #8f1c13;
+  --green: #1f7a4d;
+  --yellow: #9a6700;
+  --orange: #c2410c;
+  --shadow: 0 8px 24px rgba(23, 26, 28, 0.06);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: "Microsoft YaHei", "微软雅黑", Calibri, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+.app {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 0 14px 40px;
+}
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: linear-gradient(180deg, #171a1c 0%, #2a2f33 100%);
+  color: #fff;
+  margin: 0 -14px 14px;
+  padding: 16px 18px 14px;
+}
+
+.top h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+.top p {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: rgba(255,255,255,0.72);
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 14px;
+  margin-bottom: 12px;
+  box-shadow: var(--shadow);
+}
+
+.card h2 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.seg {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.seg button {
+  border: 1px solid var(--line);
+  background: #f7f8f9;
+  border-radius: 10px;
+  padding: 10px 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--text);
+}
+.seg button.active {
+  background: var(--red);
+  border-color: var(--red);
+  color: #fff;
+}
+
+.field {
+  margin-bottom: 10px;
+}
+.field label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.field .unit {
+  color: var(--muted);
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+}
+.field input, .field select {
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 16px;
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+  background: #fff;
+  color: var(--text);
+}
+.hint {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+.kpi {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.kpi .item {
+  background: #f7f8f9;
+  border-radius: 12px;
+  padding: 12px 10px;
+}
+.kpi .item.wide { grid-column: 1 / -1; }
+.kpi span {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
+}
+.kpi b {
+  display: block;
+  margin-top: 4px;
+  font-size: 22px;
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.badge.green { background: #e8f6ee; color: var(--green); }
+.badge.yellow { background: #fff6d9; color: var(--yellow); }
+.badge.orange { background: #ffedd5; color: var(--orange); }
+.badge.red { background: #fde8e6; color: var(--red); }
+
+.result-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+}
+.result-row:last-child { border-bottom: 0; }
+.result-row b {
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+  font-weight: 600;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 8px;
+}
+button.primary, button.ghost {
+  border-radius: 12px;
+  padding: 12px 10px;
+  font-size: 15px;
+  font-family: inherit;
+}
+button.primary {
+  background: var(--red);
+  color: #fff;
+  border: 0;
+}
+button.ghost {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+button.danger {
+  width: 100%;
+  margin-top: 8px;
+  background: #fff;
+  color: var(--red);
+  border: 1px solid #f0c9c6;
+  border-radius: 12px;
+  padding: 10px;
+  font-family: inherit;
+}
+
+.history-item {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 8px;
+}
+.history-item p { margin: 0; font-size: 13px; }
+.history-item .time {
+  color: var(--muted);
+  font-size: 12px;
+  font-family: Calibri, "Microsoft YaHei", sans-serif;
+}
+
+.error {
+  background: #fde8e6;
+  color: var(--red);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+.okline {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+.install-tip {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (min-width: 720px) {
+  .app { padding-top: 12px; }
+  .top { border-radius: 14px; margin: 0 0 14px; }
+}

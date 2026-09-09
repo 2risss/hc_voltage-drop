@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>压降验证测算 — 公式说明书（待确认）</title>
+  <style>
+    :root {
+      --bg: #f6f7f8;
+      --card: #ffffff;
+      --text: #1f2328;
+      --muted: #5c6370;
+      --line: #e6e8eb;
+      --accent: #b42318;
+      --ok: #1f7a4d;
+      --warn: #9a6700;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Microsoft YaHei", "微软雅黑", Calibri, sans-serif;
+      line-height: 1.65;
+    }
+    .wrap { max-width: 880px; margin: 0 auto; padding: 24px 16px 64px; }
+    h1 { font-size: 28px; margin: 0 0 8px; }
+    h2 { font-size: 20px; margin: 32px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+    h3 { font-size: 16px; margin: 20px 0 8px; }
+    p, li { font-size: 15px; }
+    .sub { color: var(--muted); margin-bottom: 24px; }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin: 12px 0;
+    }
+    .kpi {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .kpi div {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .kpi b { display: block; font-size: 22px; font-family: Calibri, "Microsoft YaHei", sans-serif; }
+    .kpi span { color: var(--muted); font-size: 13px; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--line);
+      padding: 8px 10px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: #f3f4f6; }
+    code, .f {
+      font-family: Calibri, "Microsoft YaHei", monospace;
+      background: #f3f4f6;
+      padding: 1px 6px;
+      border-radius: 4px;
+    }
+    .note { color: var(--warn); }
+    .ok { color: var(--ok); }
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f3f4f6;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>压降验证测算 — 公式说明书</h1>
+    <p class="sub">来源：本地文件 data/压降计算公式.xlsm（工作表 SP / TP，版本 V1.1）。本页只整理计算逻辑，供确认后写入 JSON，暂未做网页。</p>
+
+    <div class="kpi">
+      <div><span>源文件版本</span><b>V1.1</b></div>
+      <div><span>单相算例核对</span><b class="ok">一致</b></div>
+      <div><span>三相算例核对</span><b class="ok">一致</b></div>
+      <div><span>建议公式配置版本</span><b>1.0.0</b></div>
+    </div>
+
+    <h2>一、这个表实际在算什么</h2>
+    <div class="card">
+      <p>原表有两套计算：</p>
+      <ul>
+        <li>SP：单相电源、三芯电缆</li>
+        <li>TP：三相电源、五芯电缆</li>
+      </ul>
+      <p>用户填电气参数后，表会给出：线路电阻、压降（伏特）、压降百分比、充电器端电压，以及载流量是否足够、热损失功率、电源点容量（kVA）。</p>
+      <p>原表标题含内部产品名称。开源网页建议用「压降验证测算」，不使用官方商标。</p>
+    </div>
+
+    <h2>二、用户需要填写的内容</h2>
+    <h3>共同输入</h3>
+    <table>
+      <thead>
+        <tr><th>项目</th><th>可选值 / 范围</th><th>是否真正参与计算</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>电缆类型</td><td>YJV、YJV22</td><td>只采集，公式里未使用</td></tr>
+        <tr><td>车载充电机</td><td>48 / 72 / 96 A</td><td>单相未使用；三相用于取计算电流</td></tr>
+        <tr><td>充电器限流设置</td><td>6 / 8 / 10 / 13 / 16 / 20 / 25 / 32 A</td><td>参与压降、功率、容量</td></tr>
+        <tr><td>环境温度</td><td>25 / 30 / 35 / 40 ℃</td><td>只用于空气敷设载流量表，不用于电阻</td></tr>
+        <tr><td>主线芯线径</td><td>6 / 10 / 16 / 25 / 35 mm²</td><td>参与电阻和载流量</td></tr>
+        <tr><td>各敷设方式长度</td><td>0–500 m，总和不超过 500 m</td><td>总长参与电阻；部分方式参与载流量修正</td></tr>
+        <tr><td>直埋地 / 穿管埋地温度</td><td>20 / 25 / 30 ℃</td><td>仅当对应长度不为 0 时，用于埋地载流量</td></tr>
+      </tbody>
+    </table>
+    <h3>电源电压</h3>
+    <ul>
+      <li>单相：电源点电压 198–242 V（表内示例 220 V）</li>
+      <li>三相：UAB、UBC、UCA 各 342–418 V（表内示例 380 V）</li>
+    </ul>
+
+    <h2>三、核心公式（电阻与压降）</h2>
+    <div class="card">
+      <p>电阻不随环境温度变化。表里把导体温度固定按 60℃ 修正，并乘以 1.02。</p>
+      <p>铜导体 20℃ 电阻率按 1.72（单位换算后为 0.0172 Ω·mm²/m）。</p>
+      <p class="f">总长度 L = 七种敷设方式长度之和</p>
+      <p class="f">直流电阻 Rθ = (1.72 / 100) × [1 + 0.004 × (60 − 20)] × 1.02 × L ÷ 线径</p>
+      <p>化简后：</p>
+      <p class="f">Rθ = 0.02035104 × L ÷ 线径</p>
+      <p class="f">交流电阻 Rj = Rθ（表中二者相同）</p>
+      <p>单相压降（往返两根线）：</p>
+      <p class="f">压降 Δu = 限流电流 I × Rθ × 2</p>
+      <p class="f">压降百分比 Δu% = Δu ÷ 电源电压 × 100</p>
+      <p class="f">末端电压 U = 电源电压 − Δu</p>
+      <p>三相压降同样用「电流 × 电阻 × 2」，不是 √3 公式。三相计算电流为：</p>
+      <p class="f">I三相 = 取较小值（车载充电机 ÷ 3，充电器限流）</p>
+      <p>然后对 AB / BC / CA 三路分别算百分比和末端电压。压降伏特值三路相同（因为用同一电阻、同一电流）。</p>
+    </div>
+
+    <h2>四、用原表数字交叉验证</h2>
+    <h3>单相示例（工作表当前值）</h3>
+    <p>限流 32 A，电源 220 V，穿管明敷 50 m，其余为 0，线径 6 mm²。</p>
+    <table>
+      <thead><tr><th>项目</th><th>手工计算</th><th>原表结果</th></tr></thead>
+      <tbody>
+        <tr><td>Rθ / Rj</td><td>0.169592 Ω</td><td>0.169592 Ω</td></tr>
+        <tr><td>压降 Δu</td><td>10.853888 V</td><td>10.853888 V</td></tr>
+        <tr><td>压降百分比</td><td>4.93%</td><td>4.933585... %</td></tr>
+        <tr><td>末端电压</td><td>209.146112 V</td><td>209.146112 V</td></tr>
+      </tbody>
+    </table>
+    <h3>三相示例（工作表当前值）</h3>
+    <p>车载 48 A，限流 32 A，故 I三相 = 16 A；三路线电压均为 380 V；穿管明敷 100 m；线径 6 mm²。</p>
+    <table>
+      <thead><tr><th>项目</th><th>手工计算</th><th>原表结果</th></tr></thead>
+      <tbody>
+        <tr><td>Rθ / Rj</td><td>0.339184 Ω</td><td>0.339184 Ω</td></tr>
+        <tr><td>压降 Δu</td><td>10.853888 V</td><td>10.853888 V</td></tr>
+        <tr><td>压降百分比</td><td>2.86%</td><td>2.856286... %</td></tr>
+        <tr><td>末端电压</td><td>369.146112 V</td><td>369.146112 V</td></tr>
+      </tbody>
+    </table>
+    <p class="ok">压降三项与原表完全一致。</p>
+
+    <h2>五、结论分级（按末端电压）</h2>
+    <table>
+      <thead><tr><th>结论</th><th>单相末端电压</th><th>三相末端电压（取较低一路）</th></tr></thead>
+      <tbody>
+        <tr><td>低电压损失</td><td>≥ 209 V</td><td>≥ 361 V</td></tr>
+        <tr><td>中电压损失</td><td>≥ 198 V 且 &lt; 209 V</td><td>≥ 342 V 且 &lt; 361 V</td></tr>
+        <tr><td>高电压损失</td><td>≥ 185 V 且 &lt; 198 V</td><td>≥ 320 V 且 &lt; 342 V</td></tr>
+        <tr><td>过高电压损失</td><td>&lt; 185 V</td><td>&lt; 320 V</td></tr>
+      </tbody>
+    </table>
+    <p class="note">注意：原表三相“取最低电压”的写法不是标准的三者取最小，在三路电压大小交错时可能取错。建议网页改成真正的三者取最小。请确认。</p>
+
+    <h2>六、载流量（原表另有一块，第一版可选用）</h2>
+    <p>空气敷设时，按线径和环境温度查表，再按敷设方式打折：</p>
+    <ul>
+      <li>若「无孔托盘」长度不为 0：先乘 0.93</li>
+      <li>若「穿管明敷/线槽」或「吊顶、架空地板」或「砖墙、孔道内」任一长度不为 0：再按 ÷0.93×0.78</li>
+      <li>若两段都有，0.93 会抵消，最终相当于乘 0.78</li>
+    </ul>
+    <p>空气敷设载流量（A）：</p>
+    <table>
+      <thead><tr><th>线径 mm²</th><th>25℃</th><th>30℃</th><th>35℃</th><th>40℃</th></tr></thead>
+      <tbody>
+        <tr><td>6</td><td>40</td><td>38</td><td>36</td><td>34</td></tr>
+        <tr><td>10</td><td>78</td><td>75</td><td>72</td><td>68</td></tr>
+        <tr><td>16</td><td>104</td><td>100</td><td>96</td><td>91</td></tr>
+        <tr><td>25</td><td>132</td><td>127</td><td>122</td><td>116</td></tr>
+        <tr><td>35</td><td>164</td><td>158</td><td>152</td><td>144</td></tr>
+      </tbody>
+    </table>
+    <p>只要「直埋地」或「穿管埋地」长度不为 0，就改查埋地表（按埋地温度，取两者较高温度），不再用空气表。埋地表没有 6 mm²：</p>
+    <table>
+      <thead><tr><th>线径 mm²</th><th>20℃</th><th>25℃</th><th>30℃</th></tr></thead>
+      <tbody>
+        <tr><td>6</td><td colspan="3">原表无数据，载流量会变成 0，结论为「不足」</td></tr>
+        <tr><td>10</td><td>52</td><td>49</td><td>46</td></tr>
+        <tr><td>16</td><td>67</td><td>64</td><td>60</td></tr>
+        <tr><td>25</td><td>86</td><td>82</td><td>77</td></tr>
+        <tr><td>35</td><td>103</td><td>98</td><td>92</td></tr>
+      </tbody>
+    </table>
+    <p>结论：载流量 ≥ 计算电流 → 足够；否则不足。</p>
+    <p>单相示例：6 mm²、25℃、穿管明敷 50 m → 40 ÷ 0.93 × 0.78 = 33.55 A，与原表一致。</p>
+
+    <h2>七、热损失与电源容量（原表另有一块，第一版可选用）</h2>
+    <p>单相：</p>
+    <p class="f">热损失功率 Pl(kW) = I × I × Rj × 2 ÷ 1000</p>
+    <p class="f">热损失百分数 = Pl×1000 ÷ (电源电压×I + Pl×1000) × 100</p>
+    <p class="f">电源容量(kVA) = 电源电压×I ÷ 0.97 ÷ 1000 + Pl</p>
+    <p>三相：</p>
+    <p class="f">Pl(kW) = I三相×I三相×Rj×3 ÷ 1000</p>
+    <p class="f">百分数 = Pl×1000 ÷ ((UAB+UBC+UCA)×I三相÷1.732 + Pl×1000) × 100</p>
+    <p class="f">电源容量(kVA) = (UAB+UBC+UCA)×I三相÷1.732 ÷ 1000 ÷ 0.97 + Pl</p>
+    <p>功率损失分级：小于 5% 为低；5%–10% 为中；大于 10% 为高。</p>
+    <p>单相示例 Pl = 0.3473 kW、4.70%、7.605 kVA，与原表一致。三相示例 Pl = 0.2605 kW、2.41%、11.117 kVA，与原表一致。</p>
+
+    <h2>八、原表有、但不建议原样搬到网页的内容</h2>
+    <ul>
+      <li>工作表保护、宏按钮、破解保护的代码：网页不需要，也不纳入开源工具。</li>
+      <li>电缆类型选项：原公式未使用，若界面保留，只作记录，不算电阻。</li>
+      <li>单相的「车载充电机」：原公式未使用。</li>
+    </ul>
+
+    <h2>九、建议写入 JSON 的结构（确认后再做）</h2>
+    <ul>
+      <li>version：如 1.0.0，页面显示「公式版本」</li>
+      <li>source：V1.1 / SP+TP</li>
+      <li>constants：电阻率、温度系数、60℃、1.02、0.97、1.732 等</li>
+      <li>inputs：下拉选项与校验范围</li>
+      <li>steps：按名称排列的计算步骤（网页只解释执行这些步骤，不写死公式）</li>
+      <li>ampacity_tables：空气表、埋地表、敷设修正</li>
+      <li>thresholds：电压/功率分级门槛</li>
+    </ul>
+
+    <h2>十、请确认后再进入下一步</h2>
+    <ol>
+      <li>第一版是否只做压降、压降百分比、末端电压，还是把载流量、热损失、电源容量一起做上？</li>
+      <li>三相最低末端电压：按「三者真正取最小」修正，还是完全模仿原表可能取错的写法？</li>
+      <li>电缆类型、单相车载充电机：界面保留作备注，还是第一版先去掉？</li>
+      <li>这些系数和载流量表将随开源仓库公开，是否允许？</li>
+    </ol>
+    <p>确认后下一步：生成 config 用的 formula.json，并用上述两组算例自动验算。仍不写网页。</p>
+  </div>
+</body>
+</html>

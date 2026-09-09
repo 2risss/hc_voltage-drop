@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>公式验算结果</title>
+  <style>
+    body { font-family: "Microsoft YaHei", "微软雅黑", Calibri, sans-serif; background:#f6f7f8; color:#1f2328; margin:0; }
+    .wrap { max-width: 960px; margin: 0 auto; padding: 24px 16px 64px; }
+    table { width:100%; border-collapse: collapse; background:#fff; font-size:14px; }
+    th, td { border:1px solid #e6e8eb; padding:8px 10px; text-align:left; }
+    th { background:#f3f4f6; }
+    .kpi { font-size:28px; margin: 8px 0 20px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>压降验证测算 — 公式 JSON 验算</h1>
+    <p>公式版本 1.0.0，对照原表 V1.1 两组当前算例。</p>
+    <div class="kpi">全部通过</div>
+    <table>
+      <thead><tr><th>算例</th><th>模式</th><th>项目</th><th>原表</th><th>JSON计算结果</th><th>核对</th></tr></thead>
+      <tbody>
+        <tr><td>sp_workbook_current</td><td>single_phase</td><td>R_dc</td><td>0.169592</td><td>0.169592</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>R_ac</td><td>0.169592</td><td>0.169592</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>dU_pct</td><td>4.93358545455</td><td>4.93358545455</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>dU</td><td>10.853888</td><td>10.853888</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>u_end</td><td>209.146112</td><td>209.146112</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>I_c</td><td>33.5483870968</td><td>33.5483870968</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>p_loss_pct</td><td>4.70162668432</td><td>4.70162668432</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>p_loss_kw</td><td>0.347324416</td><td>0.347324416</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>s_kva</td><td>7.60505628586</td><td>7.60505637476</td><td style='color:#1f7a4d'>通过（原表单精度差）</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>voltage_class</td><td>低电压损失</td><td>低电压损失</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>ampacity_class</td><td>足够</td><td>足够</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>sp_workbook_current</td><td>single_phase</td><td>power_class</td><td>低功率损失</td><td>低功率损失</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>R_dc</td><td>0.339184</td><td>0.339184</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>R_ac</td><td>0.339184</td><td>0.339184</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>dU_pct_ab</td><td>2.85628631579</td><td>2.85628631579</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>dU_pct_bc</td><td>2.85628631579</td><td>2.85628631579</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>dU_pct_ca</td><td>2.85628631579</td><td>2.85628631579</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>dU</td><td>10.853888</td><td>10.853888</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>u_end_ab</td><td>369.146112</td><td>369.146112</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>u_end_bc</td><td>369.146112</td><td>369.146112</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>u_end_ca</td><td>369.146112</td><td>369.146112</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>I_c</td><td>33.5483870968</td><td>33.5483870968</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>p_loss_pct</td><td>2.41383663933</td><td>2.41383663933</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>p_loss_kw</td><td>0.260493312</td><td>0.260493312</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>s_kva</td><td>11.1173772812</td><td>11.1173776719</td><td style='color:#1f7a4d'>通过（原表单精度差）</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>voltage_class</td><td>低电压损失</td><td>低电压损失</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>ampacity_class</td><td>足够</td><td>足够</td><td style='color:#1f7a4d'>通过</td></tr><tr><td>tp_workbook_current</td><td>three_phase</td><td>power_class</td><td>低功率损失</td><td>低功率损失</td><td style='color:#1f7a4d'>通过</td></tr>
+      </tbody>
+    </table>
+    <p>文件：config/formula.json。本步未写网页，也未推送到 GitHub。</p>
+  </div>
+</body>
+</html>
