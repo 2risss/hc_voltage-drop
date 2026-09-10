@@ -14,7 +14,7 @@
 - 三相最低末端电压：完全按原表宏的比较顺序（不是标准三者取最小）。
 - 电缆类型、单相「车载充电机」：界面保留作备注；单相车载充电机不参与计算，三相车载充电机参与取计算电流。
 - 内网仓库：https://github.tesla.cn/luying/hc_voltage-drop ；系数和载流量表允许随仓库公开。原 Excel/宏仍不上传。
-- 公网仓库：github.com 上另建 Public 仓库 `hc_voltage-drop`；内网 `origin` 不改；公网用第二个远程名 `public`。微信单文件 `压降验证测算.html` 一并入库。
+- 公网仓库：https://github.com/2risss/hc_voltage-drop ；内网 `origin` 不改；公网远程名 `public`。网页：https://2risss.github.io/hc_voltage-drop/ 。微信单文件 `压降验证测算.html` 一并入库。
 - 公式来源：`data/压降计算公式.xlsm`（只读）。网页公式从同仓库 JSON 加载，版本号单独显示。
 
 ## 必须遵守

@@ -4,11 +4,11 @@
 
 ## 公网地址（推荐分享）
 
-仓库：https://github.com/YOUR_GITHUB_USERNAME/hc_voltage-drop
+仓库：https://github.com/2risss/hc_voltage-drop
 
 网页（GitHub Pages，开启后）：
 
-https://YOUR_GITHUB_USERNAME.github.io/hc_voltage-drop/
+https://2risss.github.io/hc_voltage-drop/
 
 把上面这个链接发给别人即可，不需要登录。微信里点链接也能打开。
 
